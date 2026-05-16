@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TXD Maker — GTA San Andreas Texture Tool</title>
+    <meta name="description" content="Convert PNG images to TXD texture files for GTA San Andreas modding. Supports bulk conversion, DXT compression, and mipmap generation.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-effects">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header" id="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 40 40" fill="none">
+                            <rect x="4" y="4" width="32" height="32" rx="6" stroke="url(#logo-grad)" stroke-width="2.5"/>
+                            <path d="M12 14h16M12 20h16M12 26h10" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="logo-grad" x1="4" y1="4" x2="36" y2="36">
+                                    <stop stop-color="#a78bfa"/>
+                                    <stop offset="1" stop-color="#6366f1"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <h1>TXD Maker</h1>
+                        <span class="logo-subtitle">GTA San Andreas Texture Tool</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="status-badge" id="status-badge">
+                    <span class="status-dot"></span>
+                    <span>Ready</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel: Upload & Files -->
+            <section class="panel panel-left" id="panel-left">
+                <div class="panel-header">
+                    <h2>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        Image Files
+                    </h2>
+                    <span class="file-count" id="file-count">0 files</span>
+                </div>
+
+                <!-- Drop Zone -->
+                <div class="dropzone" id="dropzone">
+                    <div class="dropzone-content">
+                        <div class="dropzone-icon">
+                            <svg viewBox="0 0 64 64" fill="none">
+                                <rect x="8" y="12" width="48" height="40" rx="4" stroke="currentColor" stroke-width="2" stroke-dasharray="4 3"/>
+                                <path d="M32 22v16M24 30l8-8 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="22" cy="40" r="3" fill="currentColor" opacity="0.3"/>
+                                <path d="M16 44l10-8 8 6 6-4 8 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
+                            </svg>
+                        </div>
+                        <p class="dropzone-text">Drag & Drop images here</p>
+                        <p class="dropzone-subtext">or click to browse files</p>
+                        <p class="dropzone-formats">PNG, JPG, BMP, WebP supported</p>
+                    </div>
+                    <input type="file" id="file-input" multiple accept=".png,.jpg,.jpeg,.bmp,.webp,.tga" hidden>
+                </div>
+
+                <!-- File List -->
+                <div class="file-list-container" id="file-list-container" style="display:none;">
+                    <div class="file-list-actions">
+                        <button class="btn btn-sm btn-ghost" id="btn-add-more">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                            Add More
+                        </button>
+                        <button class="btn btn-sm btn-ghost btn-danger" id="btn-clear-all">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                            Clear All
+                        </button>
+                    </div>
+                    <div class="file-list" id="file-list"></div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Settings & Convert -->
+            <section class="panel panel-right" id="panel-right">
+                <div class="panel-header">
+                    <h2>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                        </svg>
+                        Settings
+                    </h2>
+                </div>
+
+                <div class="settings-body">
+                    <!-- TXD Settings -->
+                    <div class="settings-group">
+                        <label class="settings-label">TXD Name</label>
+                        <input type="text" class="input" id="txd-name" value="output" placeholder="Enter TXD file name">
+                    </div>
+
+                    <div class="settings-group">
+                        <label class="settings-label">Conversion Mode</label>
+                        <div class="radio-group">
+                            <label class="radio-option active" data-value="single">
+                                <input type="radio" name="mode" value="single" checked>
+                                <div class="radio-content">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+                                    <div>
+                                        <strong>Single TXD</strong>
+                                        <small>All images → 1 TXD file</small>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="radio-option" data-value="separate">
+                                <input type="radio" name="mode" value="separate">
+                                <div class="radio-content">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="9" height="9" rx="1"/><rect x="13" y="2" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/></svg>
+                                    <div>
+                                        <strong>Separate TXDs</strong>
+                                        <small>Each image → own TXD</small>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <label class="settings-label">Compression</label>
+                        <select class="select" id="compression">
+                            <option value="auto">Auto Detect (Recommended)</option>
+                            <option value="DXT1">DXT1 — No Alpha (Smallest)</option>
+                            <option value="DXT3">DXT3 — Sharp Alpha</option>
+                            <option value="DXT5">DXT5 — Smooth Alpha</option>
+                            <option value="RGBA">Uncompressed RGBA (Largest)</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-row">
+                        <div class="settings-group flex-1">
+                            <label class="settings-label">Mipmaps</label>
+                            <div class="toggle-wrapper">
+                                <label class="toggle" id="toggle-mipmaps">
+                                    <input type="checkbox" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span class="toggle-label">Generate</span>
+                            </div>
+                        </div>
+                        <div class="settings-group flex-1">
+                            <label class="settings-label">Max Levels</label>
+                            <select class="select select-sm" id="max-mipmaps">
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4" selected>4</option>
+                                <option value="6">6</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <label class="settings-label">Auto Resize</label>
+                        <div class="toggle-wrapper">
+                            <label class="toggle" id="toggle-resize">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label">Resize to power-of-2 dimensions</span>
+                        </div>
+                    </div>
+
+                    <!-- Info Box -->
+                    <div class="info-box" id="info-box">
+                        <div class="info-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+                            </svg>
+                        </div>
+                        <div class="info-text">
+                            <p><strong>GTA SA Compatible</strong></p>
+                            <p>RenderWare v3.6.0.3 · Platform D3D9 · PC</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Convert Button -->
+                <div class="convert-section">
+                    <button class="btn btn-convert" id="btn-convert" disabled>
+                        <div class="btn-convert-content">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <path d="M12 18v-6M9 15l3 3 3-3"/>
+                            </svg>
+                            <span>Convert to TXD</span>
+                        </div>
+                        <div class="btn-convert-progress" id="convert-progress" style="display:none;">
+                            <div class="spinner"></div>
+                            <span>Converting...</span>
+                        </div>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Result Panel (hidden by default) -->
+        <div class="result-panel" id="result-panel" style="display:none;">
+            <div class="result-header">
+                <h2>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    Conversion Complete!
+                </h2>
+                <button class="btn btn-sm btn-ghost" id="btn-close-result">✕</button>
+            </div>
+            <div class="result-body" id="result-body"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <span>TXD Maker v1.0</span>
+            <span class="footer-sep">·</span>
+            <span>RenderWare v3.6.0.3</span>
+            <span class="footer-sep">·</span>
+            <span>GTA San Andreas</span>
+        </footer>
+    </div>
+
+    <script src="txd-builder.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
