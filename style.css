@@ -910,6 +910,15 @@ body {
     font-family: var(--font-mono);
 }
 
+.result-item-zip {
+    border-color: var(--border-accent);
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.result-item-zip .result-item-name {
+    color: var(--text-accent);
+}
+
 /* ── Footer ── */
 .app-footer {
     display: flex;

@@ -230,7 +230,8 @@ async function convertFiles() {
             }]);
 
         } else {
-            // Each image -> separate TXD
+            // Each image -> separate TXD, bundled into a ZIP
+            const zip = new JSZip();
             const results = [];
 
             for (const f of state.files) {
@@ -244,13 +245,26 @@ async function convertFiles() {
                 });
 
                 const txdData = builder.build();
-                downloadUint8Array(txdData, `${f.texName}.txd`);
+                zip.file(`${f.texName}.txd`, txdData);
                 results.push({
                     filename: `${f.texName}.txd`,
                     size: txdData.length,
                     textures: [info]
                 });
             }
+
+            // Generate and download ZIP
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const zipName = `${txdName}_textures.zip`;
+            downloadBlob(zipBlob, zipName);
+
+            // Add ZIP summary to results
+            results.unshift({
+                filename: zipName,
+                size: zipBlob.size,
+                textures: [{ name: `${results.length} TXD files`, width: '-', height: '-', format: 'ZIP' }],
+                isZip: true
+            });
 
             showResults(results);
         }
@@ -269,6 +283,10 @@ async function convertFiles() {
 
 function downloadUint8Array(data, filename) {
     const blob = new Blob([data], { type: 'application/octet-stream' });
+    downloadBlob(blob, filename);
+}
+
+function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -289,16 +307,23 @@ function showResults(results) {
         ).join(', ');
 
         const item = document.createElement('div');
-        item.className = 'result-item';
+        item.className = 'result-item' + (r.isZip ? ' result-item-zip' : '');
         item.style.animationDelay = `${i * 0.1}s`;
+
+        const icon = r.isZip
+            ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-accent)" stroke-width="2">
+                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+               </svg>`
+            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5">
+                 <polyline points="20 6 9 17 4 12"/>
+               </svg>`;
+
         item.innerHTML = `
             <div class="result-item-info">
                 <div class="result-item-name">${r.filename}</div>
-                <div class="result-item-meta">${formatSize(r.size)} \u00B7 ${r.textures.length} texture(s) \u00B7 ${texList}</div>
+                <div class="result-item-meta">${formatSize(r.size)} \u00B7 ${r.isZip ? r.textures[0].name : r.textures.length + ' texture(s) \u00B7 ' + texList}</div>
             </div>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"/>
-            </svg>
+            ${icon}
         `;
         resultBody.appendChild(item);
     });
